@@ -19,7 +19,7 @@ class FollowAction(Actions):
 	
 	def doAction(self, dmsg):
 		data = dmsg.getMsg()
-		reply_content = self.getTemplates(dmsg.get('receiver_id'), dmsg.get('CMD'))
+		reply_content = self.getTemplates(dmsg)
 		smsg = TextMessage(dmsg.getMsgId())
 		smsg.setContent(reply_content)
 		#print 'smsg', smsg.getMsg()

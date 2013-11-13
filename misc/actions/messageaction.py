@@ -29,10 +29,11 @@ class MessageAction(Actions):
 			(data['receiver_id'], data['sender_id'], data['type'], data['text'], json.dumps(data["data"]), json.dumps(data), created_at)
 		#print sql
 		#print self.conn.execute(sql)
-		customer_id = dmsg.getCustomerId()
-		cmd = dmsg.getCmd()
+		
 		smsg = TextMessage(dmsg.getMsgId())
-		print cmd, self.getConfig(customer_id, cmd)
+		reply_content = self.getTemplates(dmsg)
+		smsg.setContent(reply_content)
+		self.sendMessage(smsg)
 
 
 

@@ -13,6 +13,8 @@ from models import FactoryCreator
 from models.message import DeliverMessage
 import conf.settings as settings
 
+LOGGER = logging.getLogger(__name__)
+
 class WBMessage:
 
 	service = {}
@@ -21,10 +23,8 @@ class WBMessage:
 	def __init__(self):
 		#logging.basicConfig(level = logging.INFO)
 
-		self.LOGGER = logging.getLogger(self.__class__.__name__)
-		self.LOGGER.setLevel(logging.DEBUG)
-		self.LOGGER.debug('[initalize......]')	
-		self.LOGGER.debug('[loading service......]')
+		LOGGER.info('[initalize......]')	
+		LOGGER.info('[loading service......]')
 
 		self.service = ServiceConfig().getConfig()
 		self.baseService = settings.service_config
@@ -36,13 +36,15 @@ class WBMessage:
 		content = None
 		try:
 			content = json.loads(data);
+			LOGGER.info('[Message Deliverd : type = %s content = %s]' % (content['type'], content['text']))
 		except:
-			self.LOGGER.error('message format error %s' % data, exc_info=False)
+			LOGGER.error('message format error %s' % data, exc_info=False)
 			return False
+
 		try:
 			
 			action_name = ''
-			cmd = 'DEFAULT'
+			cmd = content['text'].upper()
 
 			msgtype = content['type']
 			desId = str(content['receiver_id'])
@@ -54,29 +56,39 @@ class WBMessage:
 				cmd = event_type.upper()
 			elif actionList:			
 				#text = content['text']
-				tcmd = content['text'].upper()
-				if tcmd in actionList:
-					cmd = tcmd
-				else:
-					cmd = sorted([ i for i in actionList.keys() if tcmd.find(i) == 0], key=len, reverse = True)[0]
+				if cmd not in actionList:
+					cmds = sorted([ i for i in actionList.keys() if cmd.find(i) == 0], key=len, reverse = True)
+					if cmds:
+						cmd = cmds[0]
 					
-			if cmd in actionList:
+			if cmd in actionList:						# in user defined service list
 				actionInfo = actionList[cmd]
-			else:
-				actionInfo = self.baseService[cmd] if cmd in self.baseService else self.baseService['DEFAULT']
+				LOGGER.info('[in user defined service list]')
+			elif cmd in self.baseService:				# in base service list
+				actionInfo = self.baseService[cmd]
+				LOGGER.info('[in base service list]')
+			elif 'DEFAULT' in actionList:				# in user defined default service
+				actionInfo =  actionList['DEFAULT']
+				cmd = 'DEFAULT'
+				LOGGER.info('[in user defined default service]')
+			else:										# in base default service
+				actionInfo =  self.baseService['DEFAULT']
+				cmd = 'DEFAULT'
+				LOGGER.info('[in base default service]')
 
-			print 'action info', id(actionInfo)
+			#print 'action info', cmd, actionInfo
+			LOGGER.info('[CMD :: %s]' % cmd)
 			action_name = actionInfo['action']
 			dmsg = DeliverMessage()
 			dmsg.loads(content)
 			dmsg.set('cmd', cmd)
 			dmsg.set('config', actionInfo)
-			print dmsg.getMsg()
+			#print dmsg.getMsg()
 			action = self.fc.getInstance(action_name)()
-			self.LOGGER.info(action)
+			#LOGGER.info(action)
 			action.doAction(dmsg)
-		except:
-			self.error('message parse error %s' % data, exc_info=True)
+		except :
+		 	LOGGER.error('message parse error %s' % data, exc_info=True)
 	
 
 if __name__ == '__main__':

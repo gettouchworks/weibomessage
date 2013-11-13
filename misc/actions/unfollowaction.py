@@ -19,7 +19,7 @@ class UnfollowAction(Actions):
 	
 	def doAction(self, dmsg):
 		data = dmsg.getMsg()
-		print id(self.getConfig(dmsg))
+		#print id(self.getConfig(dmsg))
 		reply_content = self.getTemplates(dmsg)
 		smsg = TextMessage(dmsg.getMsgId())
 		smsg.setContent(reply_content)

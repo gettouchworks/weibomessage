@@ -19,7 +19,6 @@ class DefaultAction(Actions):
 	
 	def doAction(self, dmsg):
 		data = dmsg.getMsg()
-		print 'dmsg', data
 		# stime = data['created_at']
 		# #Sat Nov 02 15:47:02 +0800 2013
 		# created_at = int(time.mktime(email.utils.parsedate(stime)))
@@ -29,16 +28,11 @@ class DefaultAction(Actions):
 		# 	(data['receiver_id'], data['sender_id'], data['type'], data['text'], json.dumps(data["data"]), json.dumps(data), created_at)
 
 		#print self.conn.execute(sql)
-		customer_id = dmsg.getCustomerId()
-		cmd = dmsg.get('CMD')
-		print self.getConfig(customer_id, cmd)
 
 		smsg = TextMessage(dmsg.getMsgId())
-		reply_content = self.getTemplates(customer_id, cmd)
-		smsg = TextMessage(dmsg.getMsgId())
+		reply_content = self.getTemplates(dmsg)
 		smsg.setContent(reply_content)
-		print 'smsg', smsg.getMsg()
-		#self.sendMessage(smsg)
+		self.sendMessage(smsg)
 
 if __name__ == '__main__':
 
