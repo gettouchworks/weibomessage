@@ -7,6 +7,7 @@ import threading, time, random
 
 import conf.settings as settings
 
+logging.getLogger('pika').setLevel(logging.DEBUG)
 LOGGER = logging.getLogger(__name__)
 
 def singleton(cls, *args, **kw):
@@ -80,6 +81,9 @@ class Db():
 @singleton
 class MessageQueue:
 	
+
+	qconn = None
+
 	qsconn = None
 	qrconn = None
 	receive_channel = None
@@ -97,40 +101,49 @@ class MessageQueue:
 		self.__SEND_EX_NAME = qconfig['reply']['ex_name']
 		self.__SEND_Q_NAME = qconfig['reply']['queue_name']
 
+		self.__initQueue()
 
-		self.qsconn = pika.BlockingConnection(pika.ConnectionParameters(
-	        host='localhost'))
-		self.qrconn = pika.BlockingConnection(pika.ConnectionParameters(
-	        host='localhost'))
-		LOGGER.info('[init msg squeue] : %s' % self.qsconn)
-		LOGGER.info('[init msg rqueue] : %s' % self.qrconn)
 		self.__initReceiveQueue()
 		self.__initSendQeueue()
 		
 
+	def __initQueue(self):
+		self.qconn = pika.BlockingConnection(pika.ConnectionParameters(
+			host='localhost'))
+		channel = self.qconn.channel()
+		self.receive_channel = channel
+		self.send_channel = channel
+
 	def __initReceiveQueue(self):
-		receive_channel = self.qrconn.channel()
-		logging.info('[receive queue] : %s' % receive_channel)
-		receive_channel.queue_declare(queue = self.__RECEIVE_Q_NAME)
-		receive_channel.exchange_declare(exchange=self.__RECEIVE_EX_NAME, type='fanout')
+		#self.qrconn = pika.BlockingConnection(pika.ConnectionParameters(
+		#	host='localhost'))
+		#LOGGER.info('[init msg rqueue] : %s' % self.qrconn)
+		#receive_channel = self.qrconn.channel()
+
+		logging.info('[receive queue] : %s' % self.receive_channel)
+		self.receive_channel.queue_declare(queue = self.__RECEIVE_Q_NAME)
+		self.receive_channel.exchange_declare(exchange=self.__RECEIVE_EX_NAME, type='fanout')
 		#bind
-		receive_channel.queue_bind(exchange=self.__RECEIVE_EX_NAME,
+		self.receive_channel.queue_bind(exchange=self.__RECEIVE_EX_NAME,
 						queue=self.__RECEIVE_Q_NAME,
 						)
-		self.receive_channel = receive_channel
+		#self.receive_channel = receive_channel
 
 
 
 	def __initSendQeueue(self):
-		send_channel = self.qsconn.channel()
-		logging.info('[send queue] : %s' % send_channel)
-		send_channel.queue_declare(queue = self.__SEND_Q_NAME)
-		send_channel.exchange_declare(exchange=self.__SEND_EX_NAME, type='fanout')
+		#self.qsconn = pika.BlockingConnection(pika.ConnectionParameters(
+	    #    host='localhost'))
+		#LOGGER.info('[init msg squeue] : %s' % self.qsconn)
+		#send_channel = self.qsconn.channel()
+		logging.info('[send queue] : %s' % self.send_channel)
+		self.send_channel.queue_declare(queue = self.__SEND_Q_NAME)
+		self.send_channel.exchange_declare(exchange=self.__SEND_EX_NAME, type='fanout')
 		#bind
-		send_channel.queue_bind(exchange=self.__SEND_EX_NAME,
+		self.send_channel.queue_bind(exchange=self.__SEND_EX_NAME,
 						queue=self.__SEND_Q_NAME,
 						)
-		self.send_channel = send_channel
+		#self.send_channel = send_channel
 
 	def receive( self, process ):
 
@@ -147,6 +160,9 @@ class MessageQueue:
 			pass
 
 	def send(self, message):
+		LOGGER.info('qconn is open::%r' % self.qconn.is_open)
+		if not self.qconn.is_open:
+			self.__initQueue()
 		self.send_channel.basic_publish(exchange=self.__SEND_EX_NAME,
 					  routing_key='',
                       body=message)

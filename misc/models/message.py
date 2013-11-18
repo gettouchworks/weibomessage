@@ -57,6 +57,9 @@ class DeliverMessage(Message):
 	def getCmd(self):
 		return self.get('cmd')
 
+	def getText(self):
+		return self.get('text')
+
 
 class SendMessage(Message):
 

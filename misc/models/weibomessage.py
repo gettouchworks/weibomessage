@@ -6,6 +6,7 @@ import sys
 import time
 import torndb
 import logging
+import traceback
 
 from models import Db
 from models import ServiceConfig
@@ -89,6 +90,7 @@ class WBMessage:
 			action.doAction(dmsg)
 		except :
 		 	LOGGER.error('message parse error %s' % data, exc_info=True)
+		 	traceback.format_exc()
 	
 
 if __name__ == '__main__':

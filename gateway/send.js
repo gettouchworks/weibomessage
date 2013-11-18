@@ -2,6 +2,12 @@ var https = require("https");
 var querystring = require("querystring");
 var amqp = require('amqp');
 
+var domain = require('domain')
+var d = domain.create();
+d.on('error', function(err) {
+	console.error('domain caught err: ', err);
+});
+
 var baseconfig = require('./config.js').base_config
 
 var connection = amqp.createConnection({ host: "localhost", port: 5672 });
@@ -24,6 +30,8 @@ connection.on('ready', function () {
             
         })
     });
+}).on('error', function(err){
+	console.log('conn err::', err)
 })
 
 

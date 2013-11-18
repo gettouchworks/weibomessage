@@ -9,7 +9,7 @@ import logging
 from models import MessageQueue
 from models import WBMessage
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
 
 if __name__ == '__main__':
 

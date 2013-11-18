@@ -25,9 +25,9 @@ class Actions:
 
 	def sendMessage(self, smsg):
 		try:
-			pass
-			#print json.loads(smsg.get('data'))['text']
-			#self.queue.send(json.dumps(smsg.getMsg()))
+			#pass
+			print json.loads(smsg.get('data'))['text']
+			self.queue.send(json.dumps(smsg.getMsg()))
 		except:
 			LOGGER.exception('[send message error]')
 
