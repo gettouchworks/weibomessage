@@ -11,13 +11,16 @@ class FactoryCreator:
 	def getInstance(self, cmd):
 		action_name = cmd.capitalize() + 'Action'
 		LOGGER.info("[Action Name : %s]" % action_name)
+
 		try:
 			action_module = __import__(action_name.lower())
 		except:
 			action_module = __import__('defaultaction')
 			action_name = 'DefaultAction'
 			LOGGER.info("[Action Rename to %s]" % action_name)
+
 		action = getattr(action_module, action_name)
+		
 		return action
 
 if __name__ == '__main__':

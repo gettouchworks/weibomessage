@@ -10,5 +10,5 @@ class NullAction(Actions):
 	def __init__(self):
 		Actions.__init__(self);
 	
-	def doAction(self, dmsg):
+	def doAction(self):
 		pass

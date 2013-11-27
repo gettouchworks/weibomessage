@@ -17,7 +17,8 @@ class MessageAction(Actions):
 	def __init__(self):
 		Actions.__init__(self);
 
-	def doAction(self, dmsg):
+	def doAction(self):
+		dmsg = self.dmsg
 		data = dmsg.getMsg()
 		stime = data['created_at']
 		#Sat Nov 02 15:47:02 +0800 2013
@@ -31,7 +32,7 @@ class MessageAction(Actions):
 		#print self.conn.execute(sql)
 		
 		smsg = TextMessage(dmsg.getMsgId())
-		reply_content = self.getTemplates(dmsg)
+		reply_content = self.getTemplates()
 		smsg.setContent(reply_content)
 		self.sendMessage(smsg)
 

@@ -156,7 +156,7 @@ ReceiveService.prototype.receive = function(uid){
 var recvService = new ReceiveService()
 recvService.getConn()
 recvService.on('connected', function(ex){
-	console.log('msg queue ready');
+	console.log(' [*] Waiting for send message. To exit press CTRL+C')
 	this.customers(receive)
 
 })

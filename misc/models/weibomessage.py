@@ -70,11 +70,11 @@ class WBMessage:
 				LOGGER.info('[in base service list]')
 			elif 'DEFAULT' in actionList:				# in user defined default service
 				actionInfo =  actionList['DEFAULT']
-				cmd = 'DEFAULT'
+				#cmd = 'DEFAULT'
 				LOGGER.info('[in user defined default service]')
 			else:										# in base default service
 				actionInfo =  self.baseService['DEFAULT']
-				cmd = 'DEFAULT'
+				#cmd = 'DEFAULT'
 				LOGGER.info('[in base default service]')
 
 			#print 'action info', cmd, actionInfo
@@ -84,10 +84,10 @@ class WBMessage:
 			dmsg.loads(content)
 			dmsg.set('cmd', cmd)
 			dmsg.set('config', actionInfo)
-			#print dmsg.getMsg()
-			action = self.fc.getInstance(action_name)()
-			#LOGGER.info(action)
-			action.doAction(dmsg)
+
+			action = self.fc.getInstance(action_name)(dmsg)
+			action.doAction()
+			
 		except :
 		 	LOGGER.error('message parse error %s' % data, exc_info=True)
 		 	traceback.format_exc()

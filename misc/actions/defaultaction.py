@@ -13,26 +13,24 @@ from models import *
 LOGGER = logging.getLogger(__name__)
 
 class DefaultAction(Actions):
-
-	def __init__(self):
-		Actions.__init__(self);
 	
-	def doAction(self, dmsg):
-		data = dmsg.getMsg()
-		# stime = data['created_at']
-		# #Sat Nov 02 15:47:02 +0800 2013
-		# created_at = int(time.mktime(email.utils.parsedate(stime)))
-		# sql = "insert into wb_message \
-		# 	(receiver_id, sender_id, type, content, data, ori_content, created_at)	\
-		# 	values	(%d, %d, '%s', '%s', '%s', '%s', %d)" % \
-		# 	(data['receiver_id'], data['sender_id'], data['type'], data['text'], json.dumps(data["data"]), json.dumps(data), created_at)
+	def doAction(self):
 
-		#print self.conn.execute(sql)
+		# dmsg = self.dmsg
+		# data = dmsg.getMsg()
+		ustate = self.getState()
 
-		smsg = TextMessage(dmsg.getMsgId())
-		reply_content = self.getTemplates(dmsg)
+		if ustate and ustate['action'] != self.__class__.__name__:
+			actionModule = __import__(ustate['action'].lower())
+			action = getattr(actionModule, ustate['action'])(self.dmsg)
+			action.doAction()
+			return
+
+		smsg = TextMessage()
+		reply_content = self.getTemplates()
 		smsg.setContent(reply_content)
 		self.sendMessage(smsg)
+		return reply_content
 
 if __name__ == '__main__':
 

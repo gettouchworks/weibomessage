@@ -17,7 +17,8 @@ class UnfollowAction(Actions):
 	def __init__(self):
 		Actions.__init__(self);
 	
-	def doAction(self, dmsg):
+	def doAction(self):
+		dmsg = self.dmsg
 		data = dmsg.getMsg()
 		#print id(self.getConfig(dmsg))
 		reply_content = self.getTemplates(dmsg)

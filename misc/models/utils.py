@@ -1,13 +1,15 @@
 # -*- coding: utf-8 -*-
 
-import torndb
 import logging
-import pika
 import threading, time, random
+
+import torndb
+import pika
+import memcache
 
 import conf.settings as settings
 
-logging.getLogger('pika').setLevel(logging.DEBUG)
+logging.getLogger('pika').setLevel(logging.INFO)
 LOGGER = logging.getLogger(__name__)
 
 def singleton(cls, *args, **kw):
@@ -65,7 +67,7 @@ class ServiceConfig:
 
 @singleton
 class Db():
-	conn = None
+	#conn = None
 	def __init__(self):
 		dbconfig = settings.database
 		#print dbconfig
@@ -79,9 +81,18 @@ class Db():
 		return self.conn
 
 @singleton
+class Mc():
+	def __init__(self):
+		self.mc = memcache.Client(['127.0.0.1:11211'],debug=1)
+		LOGGER.debug('memcached client init')
+
+	def getConn(self):
+		LOGGER.debug(self.mc)
+		return self.mc
+
+@singleton
 class MessageQueue:
 	
-
 	qconn = None
 
 	qsconn = None
@@ -103,16 +114,29 @@ class MessageQueue:
 
 		self.__initQueue()
 
-		self.__initReceiveQueue()
-		self.__initSendQeueue()
+		# self.__initReceiveQueue()
+		# self.__initSendQeueue()
 		
 
 	def __initQueue(self):
 		self.qconn = pika.BlockingConnection(pika.ConnectionParameters(
 			host='localhost'))
-		channel = self.qconn.channel()
-		self.receive_channel = channel
-		self.send_channel = channel
+		self.channel = self.qconn.channel()
+		# self.receive_channel = channel
+		# self.send_channel = channel
+
+		#init & bind receive queue
+		self.channel.exchange_declare(exchange=self.__RECEIVE_EX_NAME, type='fanout')
+		self.channel.queue_declare(queue = self.__RECEIVE_Q_NAME)
+		self.channel.queue_bind(exchange=self.__RECEIVE_EX_NAME,
+						queue=self.__RECEIVE_Q_NAME,
+						)
+		#init & bind send queue
+		self.channel.queue_declare(queue = self.__SEND_Q_NAME)
+		self.channel.exchange_declare(exchange=self.__SEND_EX_NAME, type='fanout')
+		self.channel.queue_bind(exchange=self.__SEND_EX_NAME,
+						queue=self.__SEND_Q_NAME,
+						)
 
 	def __initReceiveQueue(self):
 		#self.qrconn = pika.BlockingConnection(pika.ConnectionParameters(
@@ -150,20 +174,24 @@ class MessageQueue:
 		def callback(ch, method, properties, body):
 			process(body)
 
-		self.receive_channel.basic_consume(callback,
+		#self.receive_channel.basic_consume(callback,
+		self.channel.basic_consume(callback,
                           queue= self.__RECEIVE_Q_NAME,
                           no_ack=True)
 
 		try:
-			self.receive_channel.start_consuming()
+			#self.receive_channel.start_consuming()
+			self.channel.start_consuming()
 		except:
+			#LOGGER.exception('receive consuming except')
 			pass
 
 	def send(self, message):
 		LOGGER.info('qconn is open::%r' % self.qconn.is_open)
 		if not self.qconn.is_open:
 			self.__initQueue()
-		self.send_channel.basic_publish(exchange=self.__SEND_EX_NAME,
+		#self.send_channel.basic_publish(exchange=self.__SEND_EX_NAME,
+		self.channel.basic_publish(exchange=self.__SEND_EX_NAME,
 					  routing_key='',
                       body=message)
 

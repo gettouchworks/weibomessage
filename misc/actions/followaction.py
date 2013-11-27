@@ -17,10 +17,10 @@ class FollowAction(Actions):
 	def __init__(self):
 		Actions.__init__(self);
 	
-	def doAction(self, dmsg):
-		data = dmsg.getMsg()
-		reply_content = self.getTemplates(dmsg)
-		smsg = TextMessage(dmsg.getMsgId())
+	def doAction(self):
+		data = self.dmsg.getMsg()
+		reply_content = self.getTemplates()
+		smsg = TextMessage(self.dmsg.getMsgId())
 		smsg.setContent(reply_content)
 		#print 'smsg', smsg.getMsg()
 		self.sendMessage(smsg)
